@@ -138,11 +138,23 @@ async def evaluate_code(req: EvaluationRequest):
 def get_results():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, timestamp, diak_nev, osztaly, technologia, mod, pontszam FROM ertekelesek ORDER BY id DESC")
+    # 💡 Lelkérjük a diak_kod és ai_valasz mezőket is:
+    cursor.execute("SELECT id, timestamp, diak_nev, osztaly, technologia, mod, pontszam, diak_kod, ai_valasz FROM ertekelesek ORDER BY id DESC")
     rows = cursor.fetchall()
     conn.close()
 
     return [
-        {"id": r[0], "timestamp": r[1], "diak_nev": r[2], "osztaly": r[3], "technologia": r[4], "mod": r[5], "pontszam": r[6]}
+        {
+            "id": r[0], 
+            "timestamp": r[1], 
+            "diak_nev": r[2], 
+            "osztaly": r[3], 
+            "technologia": r[4], 
+            "mod": r[5], 
+            "pontszam": r[6],
+            "diak_kod": r[7],
+            "ai_valasz": r[8]
+        }
         for r in rows
     ]
+
