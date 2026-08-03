@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfoTanár MI — Tanári Eredménytábla</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1100px; margin: 20px auto; padding: 15px; background: #eef2f5; color: #333; }
+        
+        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .header h2 { margin: 0; font-size: 22px; }
+        .btn-refresh { background: #27ae60; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-export { background: #2980b9; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* Szűrők fül */
+        .filter-bar { background: white; padding: 15px; border-radius: 8px; margin: 15px 0; display: flex; gap: 15px; flex-wrap: wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .filter-bar input, .filter-bar select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; flex: 1; min-width: 150px; }
+
+        /* Táblázat */
+        .table-container { background: white; border-radius: 8px; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; color: #2c3e50; font-weight: 600; }
+        tr:hover { background: #f1f4f7; }
+
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge-exam { background: #fce4e4; color: #c0392b; border: 1px solid #f5c6cb; }
+        .badge-practice { background: #e3f2fd; color: #1976d2; border: 1px solid #bbdefb; }
+        
+        .btn-view { background: #8e44ad; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+
+        /* Pop-up ablak (Modal) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px; z-index: 1000; }
+        .modal-content { background: white; width: 100%; max-width: 800px; max-height: 85vh; border-radius: 10px; padding: 25px; overflow-y: auto; position: relative; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #777; font-weight: bold; }
+        pre { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 6px; overflow-x: auto; font-family: monospace; }
+
+        /* Jelszó védelmi képernyő */
+        #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .auth-box { background: white; padding: 30px; border-radius: 10px; text-align: center; width: 320px; }
+        .auth-box input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; border-radius: 6px; text-align: center; font-size: 16px; }
+        .auth-box button { width: 100%; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<!-- JELSZÓ VÉDELMI KÉPERNYŐ -->
+<div id="authOverlay">
+    <div class="auth-box">
+        <h3>🔐 Tanári Bejelentkezés</h3>
+        <p>A felület megtekintéséhez add meg a tanári jelszót!</p>
+        <input type="password" id="passInput" placeholder="Jelszó...">
+        <button onclick="checkPass()">Belépés</button>
+    </div>
+</div>
+
+<!-- TANÁRI DASHBOARD -->
+<div class="header">
+    <h2>📊 InfoTanár MI — Tanári Eredménytábla</h2>
+    <div>
+        <button class="btn-refresh" onclick="loadResults()">🔄 Frissítés</button>
+        <button class="btn-export" onclick="exportToCSV()">📥 Letöltés (CSV/Excel)</button>
+    </div>
+</div>
+
+<!-- SZŰRŐK -->
+<div class="filter-bar">
+    <input type="text" id="searchName" oninput="filterTable()" placeholder="🔍 Keresés név alapján...">
+    <select id="filterClass" onchange="filterTable()">
+        <option value="">Minden osztály</option>
+        <option value="9">9. osztály</option>
+        <option value="10">10. osztály</option>
+        <option value="11">11. osztály</option>
+        <option value="12">12. osztály</option>
+    </select>
+    <select id="filterMode" onchange="filterTable()">
+        <option value="">Minden mód</option>
+        <option value="exam">⏱️ Dolgozat</option>
+        <option value="practice">🏋️ Gyakorlás</option>
+    </select>
+</div>
+
+<!-- EREDMÉNY TÁBLÁZAT -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Időpont</th>
+                <th>Diák Neve</th>
+                <th>Osztály</th>
+                <th>Technológia</th>
+                <th>Mód</th>
+                <th>Pontszám</th>
+                <th>Részletek</th>
+            </tr>
+        </thead>
+        <tbody id="resultsTbody">
+            <tr><td colspan="8" style="text-align:center;">⏳ Adatok betöltése a PostgreSQL adatbázisból...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- FELUGRÓ ABALAK A DIÁK KÓDJÁHOZ ÉS AI VÁLASZHOZ -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3 id="modalStudentTitle">Diák Részletei</h3>
+        <hr>
+        <h4>💻 Diák által beküldött kód:</h4>
+        <pre id="modalCode">...</pre>
+        <h4>🤖 AI Értékelés és Visszajelzés:</h4>
+        <div id="modalAiResponse">...</div>
+    </div>
+</div>
+
+<script>
+// 🔗 A TE PONTOS RENDERES CÍMED:
+const RENDER_SERVER_URL = "https://infotanar.onrender.com";
+const TEACHER_PASSWORD = "tanar2026"; // <-- Ezt megváltoztathatod tetszés szerint!
+
+let allData = [];
+
+// Jelszó ellenőrzése
+function checkPass() {
+    const input = document.getElementById('passInput').value;
+    if (input === TEACHER_PASSWORD) {
+        document.getElementById('authOverlay').style.display = 'none';
+        loadResults();
+    } else {
+        alert("Hibás jelszó!");
+    }
+}
+
+// Eredmények lekérése a PostgreSQL adatbázisból (/api/results)
+async function loadResults() {
+    const tbody = document.getElementById('resultsTbody');
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">⏳ Frissítés...</td></tr>';
+
+    try {
+        const res = await fetch(`${RENDER_SERVER_URL}/api/results`);
+        if (!res.ok) throw new Error("Szerver hiba a lekéréskor!");
+        
+        allData = await res.json();
+        renderTable(allData);
+
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">❌ Hiba az adatok betöltésekor: ${e.message}</td></tr>`;
+    }
+}
+
+// Táblázat kirajzolása
+function renderTable(data) {
+    const tbody = document.getElementById('resultsTbody');
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Még nem érkezett beküldött dolgozat.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = data.map((r, index) => `
+        <tr>
+            <td><b>#${r.id}</b></td>
+            <td><small>${r.timestamp}</small></td>
+            <td><b>${escapeHtml(r.diak_nev)}</b></td>
+            <td>${r.osztaly}. Osztály</td>
+            <td>${r.technologia}</td>
+            <td>
+                <span class="badge ${r.mod === 'exam' ? 'badge-exam' : 'badge-practice'}">
+                    ${r.mod === 'exam' ? '⏱️ Dolgozat' : '🏋️ Gyakorlás'}
+                </span>
+            </td>
+            <td><b style="color:#27ae60;">${r.pontszam}</b></td>
+            <td>
+                <button class="btn-view" onclick="showDetails(${index})">🔍 Megtekintés</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Szűrés név, osztály és mód alapján
+function filterTable() {
+    const search = document.getElementById('searchName').value.toLowerCase();
+    const grade = document.getElementById('filterClass').value;
+    const mode = document.getElementById('filterMode').value;
+
+    const filtered = allData.filter(r => {
+        const nameMatch = r.diak_nev.toLowerCase().includes(search);
+        const gradeMatch = !grade || r.osztaly.toString() === grade;
+        const modeMatch = !mode || r.mod === mode;
+        return nameMatch && gradeMatch && modeMatch;
+    });
+
+    renderTable(filtered);
+}
+
+// Részletek felugró ablak (Modal) megjelenítése
+function showDetails(index) {
+    const item = allData[index];
+    document.getElementById('modalStudentTitle').innerText = `${item.diak_nev} (${item.osztaly}. osztály) - ${item.technologia} ${item.mod === 'exam' ? 'Dolgozat' : 'Gyakorlás'}`;
+    document.getElementById('modalCode').innerText = item.diak_kod || "// Nem érkezett kód";
+    
+    const responseContainer = document.getElementById('modalAiResponse');
+    if (typeof marked !== 'undefined') {
+        responseContainer.innerHTML = marked.parse(item.ai_valasz || "");
+    } else {
+        responseContainer.innerText = item.ai_valasz;
+    }
+
+    document.getElementById('detailModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('detailModal').style.display = 'none';
+}
+
+// Exportálás Excel/CSV formátumba
+function exportToCSV() {
+    if (allData.length === 0) return alert("Nincs exportálható adat!");
+    
+    let csvContent = "\uFEFF"; // UTF-8 BOM az ékezetek helyes megjelenítéséhez Excelben
+    csvContent += "ID;Idopont;Diak Neve;Osztaly;Technologia;Mod;Pontszam\n";
+
+    allData.forEach(r => {
+        csvContent += `"${r.id}";"${r.timestamp}";"${r.diak_nev}";"${r.osztaly}";"${r.technologia}";"${r.mod}";"${r.pontszam}"\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `infotanar_eredmenyek_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+</script>
+
+</body>
+</html>
