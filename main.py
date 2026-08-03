@@ -2,7 +2,7 @@ import os
 import re
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse  # 👈 Ezt add hozzá!
+from fastapi.responses import FileResponse, HTMLResponse  # 👈 Ezt add hozzá!
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
@@ -160,4 +160,8 @@ def get_results():
 
 @app.get("/tanar")
 def read_teacher_page():
-    return FileResponse("tanar.html")
+    # Megkeressük a tanar.html fájlt a main.py mellett
+    file_path = os.path.join(os.path.dirname(__file__), "tanar.html")
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    return HTMLResponse("<h2>Hiba: A tanar.html nem található a szerveren!</h2>", status_code=404)
