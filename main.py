@@ -1,8 +1,8 @@
 import os
 import re
 from datetime import datetime
-from typing import Optional
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse  # 👈 Ezt add hozzá!
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
@@ -158,3 +158,6 @@ def get_results():
         for r in rows
     ]
 
+@app.get("/tanar")
+def read_teacher_page():
+    return FileResponse("tanar.html")
