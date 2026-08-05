@@ -167,7 +167,7 @@ async def evaluate_code(req: EvaluationRequest):
     score_match = re.search(r"PONTSZÁM:\s*(\d{1,2}\s*/\s*10)", ai_response, re.IGNORECASE)
     score_text = score_match.group(1) if score_match else "Értékelve"
 
-    //now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    #now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     now_hu = datetime.now(ZoneInfo("Europe/Budapest")).strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute('''
         INSERT INTO ertekelesek (timestamp, diak_nev, osztaly, technologia, mod, pontszam, diak_kod, ai_valasz)
