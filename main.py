@@ -103,7 +103,7 @@ async def generate_ai_task(req: TaskRequest):
     # Pontosan az általad kért hívás:
     ai_response = await call_ai(sys_prompt, user_prompt, req.preferalt_motor)
     
-    return {"task": ai_response
+    return {"task": ai_response}
 
 async def call_ai(system_prompt: str, user_prompt: str, engine: str = "groq") -> str:
     async with httpx.AsyncClient(timeout=40.0) as client:
