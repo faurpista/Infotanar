@@ -188,7 +188,7 @@ def get_results():
     conn = get_db_connection()
     cursor = conn.cursor()
     # 💡 Lelkérjük a diak_kod és ai_valasz mezőket is:
-    cursor.execute("SELECT id, timestamp, diak_nev, osztaly, technologia, mod, pontszam, diak_kod, ai_valasz FROM ertekelesek ORDER BY id DESC")
+    cursor.execute("SELECT id, timestamp, diak_nev, osztaly, technologia, mod, pontszam, diak_kod, ai_valasz, feladat FROM ertekelesek ORDER BY id DESC")
     rows = cursor.fetchall()
     conn.close()
 
@@ -202,7 +202,8 @@ def get_results():
             "mod": r[5], 
             "pontszam": r[6],
             "diak_kod": r[7],
-            "ai_valasz": r[8]
+            "ai_valasz": r[8],
+            "feladat": r[9]
         }
         for r in rows
     ]
