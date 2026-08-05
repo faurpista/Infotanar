@@ -186,11 +186,23 @@ function filterTable() {
     const mode = document.getElementById('filterMode').value;
 
     const filtered = allData.filter(r => {
-        const nameMatch = r.diak_nev.toLowerCase().includes(search);
-        const gradeMatch = !grade || r.osztaly.toString() === grade;
-        const modeMatch = !mode || r.mod === mode;
-        return nameMatch && gradeMatch && modeMatch;
-    });
+    // 1. Név szerinti keresés (kisbetűsítve)
+    const searchStr = (search || "").toLowerCase();
+    const diakNev = String(r.diak_nev || "").toLowerCase();
+    const nameMatch = diakNev.includes(searchStr);
+
+    // 2. Osztály szerinti szűrés (biztonságos string konverzióval)
+    const rOsztaly = String(r.osztaly || "").trim();
+    const gradeMatch = !grade || grade === "all" || rOsztaly === String(grade);
+
+    // 3. Mód szerinti szűrés (ékezet- és kis/nagybetű függetlenül)
+    const rMod = String(r.mod || "").toLowerCase();
+    const targetMode = String(mode || "").toLowerCase();
+    const modeMatch = !mode || mode === "all" || rMod.includes(targetMode);
+
+    return nameMatch && gradeMatch && modeMatch;
+});
+
 
     renderTable(filtered);
 }
