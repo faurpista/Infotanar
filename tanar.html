@@ -144,8 +144,8 @@ async function loadResults() {
         if (!res.ok) throw new Error("Szerver hiba a lekéréskor!");
         
         allData = await res.json();
-        renderTable(allData);
-
+       // renderTable(allData);
+       filterData();
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">❌ Hiba az adatok betöltésekor: ${e.message}</td></tr>`;
     }
