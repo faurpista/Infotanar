@@ -1,8 +1,9 @@
 import os
-import re
+import re  # 👈 Kisbetűs 'i'! (A nagy 'I' SyntaxError-t dobna)
 from datetime import datetime
+from typing import Optional
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse  # 👈 Ezt add hozzá!
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
