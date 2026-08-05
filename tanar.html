@@ -145,7 +145,7 @@ async function loadResults() {
         
         allData = await res.json();
        // renderTable(allData);
-       filterData();
+       filterTable();
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">❌ Hiba az adatok betöltésekor: ${e.message}</td></tr>`;
     }
