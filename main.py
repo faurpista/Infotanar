@@ -71,36 +71,40 @@ class EvaluationRequest(BaseModel):
 EvaluationRequest.model_rebuild
 
 class TaskRequest(BaseModel):
+# ==========================================
+# 2. FELADAT GENERÁLÁSI VÉGPONT
+# ==========================================
+class TaskRequest(BaseModel):
     language: str
-    difficulty: int
-    mode: str
-    time_limit: str
+    difficulty: int = 3
+    mode: str = "gyakorlas"
+    time_limit: str = "nincs időkorlát"
+    preferalt_motor: str = "groq"  # Opció: "groq" vagy "gemini"
 
 @app.post("/api/generate-task")
 async def generate_ai_task(req: TaskRequest):
-    # Prompt összeállítása az AI számára
-    prompt = f"""
+    sys_prompt = (
+        "Egy informatika tanár segítője vagy. A feladatod rövid, egyértelmű, magyar nyelvű "
+        "programozási feladatok generálása diákok számára. CSAK ÉS KIZÁRÓLAG a feladat leírását "
+        "add vissza! Ne írj bevezetőt, üdvözlést, magyarázatot vagy kódblokkot sem."
+    )
+
+    user_prompt = f"""
     Hozz létre egy programozási feladatot diákok számára az alábbi paraméterek alapján:
     - Programozási nyelv / Technológia: {req.language}
     - Nehézségi szint: {req.difficulty} / 5
     - Mód: {req.mode}
     - Rendelkezésre álló idő: {req.time_limit}
 
-    KÖVETELMÉNYEK:
-    - A feladat legyen egyértelmű és tömör.
-    - {req.mode} módban, ha van megadott idő ({req.time_limit}), a feladat terjedelme pontosan igazodjon ahhoz, hogy a diák kényelmesen meg tudja oldani a megadott idő alatt.
-    - Csak a feladat leírását add vissza, magyarázat és megoldás nélkül!
+    Követelmények:
+    - A feladat hossza és nehézsége pontosan igazodjon a(z) {req.difficulty}/5 szinthez.
+    - Ha a mód Dolgozat, a feladat terjedelme kényelmesen megoldható legyen a megadott idő alatt ({req.time_limit}).
     """
 
-    # ITT HÍVD MEG AZ AI MODELLT (pl. client.chat.completions.create(...) vagy google.generativeai)
-    # ai_response = await call_ai_model(prompt)
+    # Pontosan az általad kért hívás:
+    ai_response = await call_ai(sys_prompt, user_prompt, req.preferalt_motor)
     
-    # Példa visszatérési érték:
-    return {
-        "task": f"[{req.language.upper()} - {req.difficulty}/5 nehézség | Mód: {req.mode}]\n\n"
-                f"Készíts egy {req.language} programot, ami megfelel a(z) {req.difficulty}. szintű követelményeknek! "
-                f"(Rendelkezésre álló idő: {req.time_limit})"
-    }
+    return {"task": ai_response
 
 async def call_ai(system_prompt: str, user_prompt: str, engine: str = "groq") -> str:
     async with httpx.AsyncClient(timeout=40.0) as client:
