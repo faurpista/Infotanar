@@ -59,9 +59,10 @@ def init_db():
             ai_valasz TEXT
         )
     ''')
+    conn.commit()
      # 💡 AUTO-MÓDOSÍTÁS: Ha a 'feladat' oszlop hiányzik, automatikusan hozzáadja!
     cursor.execute("ALTER TABLE ertekelesek ADD COLUMN IF NOT EXISTS feladat TEXT;")
-    conn.commit()
+    
     conn.commit()
     conn.close()
 
