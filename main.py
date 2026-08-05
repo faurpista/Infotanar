@@ -59,6 +59,9 @@ def init_db():
             ai_valasz TEXT
         )
     ''')
+     # 💡 AUTO-MÓDOSÍTÁS: Ha a 'feladat' oszlop hiányzik, automatikusan hozzáadja!
+    cursor.execute("ALTER TABLE ertekelesek ADD COLUMN IF NOT EXISTS feladat TEXT;")
+    conn.commit()
     conn.commit()
     conn.close()
 
@@ -170,9 +173,9 @@ async def evaluate_code(req: EvaluationRequest):
     #now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     now_hu = datetime.now(ZoneInfo("Europe/Budapest")).strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute('''
-        INSERT INTO ertekelesek (timestamp, diak_nev, osztaly, technologia, mod, pontszam, diak_kod, ai_valasz)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    ''', (now_hu, req.diak_nev, req.osztaly, req.technologia, req.mod, score_text, req.kod, ai_response))
+        INSERT INTO ertekelesek (timestamp, diak_nev, osztaly, technologia, mod, pontszam, diak_kod, ai_valasz, feladat)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (now_hu, req.diak_nev, req.osztaly, req.technologia, req.mod, score_text, req.kod, ai_response, req.feladat))
     
     conn.commit()
     conn.close()
