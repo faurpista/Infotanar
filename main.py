@@ -8,6 +8,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import httpx
 import psycopg2
+from zoneinfo import ZoneInfo
+
+# 1. Lekérjük a pontos magyarországi időt (UTC+1 / UTC+2 automatikus nyári/téli időszámítással)
+hungarian_time = datetime.now(ZoneInfo("Europe/Budapest"))
+
+# 2. Formázzuk a kívánt alakúra az adatbázisba mentéshez
+formatted_timestamp = hungarian_time.strftime("%Y-%m-%d %H:%M:%S")
 
 app = FastAPI(title="InfoTanár MI Szerver - Render")
 
@@ -160,11 +167,12 @@ async def evaluate_code(req: EvaluationRequest):
     score_match = re.search(r"PONTSZÁM:\s*(\d{1,2}\s*/\s*10)", ai_response, re.IGNORECASE)
     score_text = score_match.group(1) if score_match else "Értékelve"
 
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    //now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now_hu = datetime.now(ZoneInfo("Europe/Budapest")).strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute('''
         INSERT INTO ertekelesek (timestamp, diak_nev, osztaly, technologia, mod, pontszam, diak_kod, ai_valasz)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    ''', (now, req.diak_nev, req.osztaly, req.technologia, req.mod, score_text, req.kod, ai_response))
+    ''', (now_hu, req.diak_nev, req.osztaly, req.technologia, req.mod, score_text, req.kod, ai_response))
     
     conn.commit()
     conn.close()
