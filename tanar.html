@@ -110,6 +110,13 @@
         <span class="close-btn" onclick="closeModal()">&times;</span>
         <h3 id="modalStudentTitle">Diák Részletei</h3>
         <hr>
+        <!-- 📌 FELADAT DOBOZ -->
+        <h4>💻 Feladat:</h4>
+        <div style="background: #f8f9fa; border-left: 4px solid #007bff; padding: 10px; margin: 10px 0;">
+            <strong>📌 Generált feladat:</strong>
+            <p id="modalTask" style="white-space: pre-wrap; margin-top: 5px;"></p>
+        </div>
+        <hr>
         <h4>💻 Diák által beküldött kód:</h4>
         <pre id="modalCode">...</pre>
         <h4>🤖 AI Értékelés és Visszajelzés:</h4>
@@ -176,10 +183,7 @@ function renderTable(data) {
             <td>
                 <button class="btn-view" onclick="showDetails(${index})">🔍 Megtekintés</button>
             </td>
-             <td>
-            <!-- Vagy a feladatot átadod a Megtekintés gombnak: -->
-            <button onclick='showDetails(${r.feladat})'>Feladat</button>
-        </td>
+             
         </tr>
     `).join('');
 }
@@ -215,18 +219,33 @@ function filterTable() {
 // Részletek felugró ablak (Modal) megjelenítése
 function showDetails(index) {
     const item = allData[index];
-    document.getElementById('modalStudentTitle').innerText = `${item.diak_nev} (${item.osztaly}. osztály) - ${item.technologia} ${item.mod === 'exam' ? 'Dolgozat' : 'Gyakorlás'}`;
+    if (!item) return;
+
+    // 1. Fejléc adatai
+    document.getElementById('modalStudentTitle').innerText = 
+        `${item.diak_nev} (${item.osztaly}. osztály) - ${item.technologia} ${item.mod === 'exam' ? 'Dolgozat' : 'Gyakorlás'}`;
+    
+    // 2. ÚJ: Feladat megjelenítése (ha van ilyen elem a modal-ban)
+    const taskElement = document.getElementById('modalTask');
+    if (taskElement) {
+        taskElement.innerText = item.feladat || "Nincs elmentett feladatleírás.";
+    }
+
+    // 3. Diák kódja
     document.getElementById('modalCode').innerText = item.diak_kod || "// Nem érkezett kód";
     
+    // 4. AI Válasz (Markdown / Text)
     const responseContainer = document.getElementById('modalAiResponse');
     if (typeof marked !== 'undefined') {
         responseContainer.innerHTML = marked.parse(item.ai_valasz || "");
     } else {
-        responseContainer.innerText = item.ai_valasz;
+        responseContainer.innerText = item.ai_valasz || "";
     }
 
+    // Modal megnyitása
     document.getElementById('detailModal').style.display = 'flex';
 }
+
 
 function closeModal() {
     document.getElementById('detailModal').style.display = 'none';
