@@ -96,7 +96,12 @@ async def generate_ai_task(req: TaskRequest):
     # ai_response = await call_ai_model(prompt)
     
     # Példa visszatérési érték:
-    return {"task": f"[{req.language} - Level {req.difficulty}] Feladat: ..."}
+    return {
+        "task": f"[{req.language.upper()} - {req.difficulty}/5 nehézség | Mód: {req.mode}]\n\n"
+                f"Készíts egy {req.language} programot, ami megfelel a(z) {req.difficulty}. szintű követelményeknek! "
+                f"(Rendelkezésre álló idő: {req.time_limit})"
+    }
+
 async def call_ai(system_prompt: str, user_prompt: str, engine: str = "groq") -> str:
     async with httpx.AsyncClient(timeout=40.0) as client:
         # 1. Groq Hívás
