@@ -69,6 +69,34 @@ class EvaluationRequest(BaseModel):
     kod: str
     preferalt_motor: Optional[str] = "groq"
 EvaluationRequest.model_rebuild
+
+class TaskRequest(BaseModel):
+    language: str
+    difficulty: int
+    mode: str
+    time_limit: str
+
+@app.post("/api/generate-task")
+async def generate_ai_task(req: TaskRequest):
+    # Prompt összeállítása az AI számára
+    prompt = f"""
+    Hozz létre egy programozási feladatot diákok számára az alábbi paraméterek alapján:
+    - Programozási nyelv / Technológia: {req.language}
+    - Nehézségi szint: {req.difficulty} / 5
+    - Mód: {req.mode}
+    - Rendelkezésre álló idő: {req.time_limit}
+
+    KÖVETELMÉNYEK:
+    - A feladat legyen egyértelmű és tömör.
+    - {req.mode} módban, ha van megadott idő ({req.time_limit}), a feladat terjedelme pontosan igazodjon ahhoz, hogy a diák kényelmesen meg tudja oldani a megadott idő alatt.
+    - Csak a feladat leírását add vissza, magyarázat és megoldás nélkül!
+    """
+
+    # ITT HÍVD MEG AZ AI MODELLT (pl. client.chat.completions.create(...) vagy google.generativeai)
+    # ai_response = await call_ai_model(prompt)
+    
+    # Példa visszatérési érték:
+    return {"task": f"[{req.language} - Level {req.difficulty}] Feladat: ..."}
 async def call_ai(system_prompt: str, user_prompt: str, engine: str = "groq") -> str:
     async with httpx.AsyncClient(timeout=40.0) as client:
         # 1. Groq Hívás
