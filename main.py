@@ -67,7 +67,7 @@ class EvaluationRequest(BaseModel):
     feladat: str
     kod: str
     preferalt_motor: Optional[str] = "groq"
-
+EvaluationRequest.model_rebuild
 async def call_ai(system_prompt: str, user_prompt: str, engine: str = "groq") -> str:
     async with httpx.AsyncClient(timeout=40.0) as client:
         # 1. Groq Hívás
