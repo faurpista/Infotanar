@@ -70,7 +70,6 @@ class EvaluationRequest(BaseModel):
     preferalt_motor: Optional[str] = "groq"
 EvaluationRequest.model_rebuild
 
-class TaskRequest(BaseModel):
 # ==========================================
 # 2. FELADAT GENERÁLÁSI VÉGPONT
 # ==========================================
