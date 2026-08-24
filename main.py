@@ -263,7 +263,67 @@ def get_results():
         }
         for r in rows
     ]
+# ==========================================
+# AKTUÁLIS/LEGKÖZELEBBI DOLGOZAT LEKÉRÉSE
+# ==========================================
+@app.get("/api/get-active-exam")
+def get_active_exam(osztaly: int, technologia: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
+    try:
+        # A megadott osztály és technológia alapján lekérjük a dolgozatokat
+        cursor.execute('''
+            SELECT id, osztaly, technologia, nehezseg, feladat, datum_ido
+            FROM dolgozat
+            WHERE osztaly = %s AND technologia = %s
+        ''', (osztaly, technologia))
+        rows = cursor.fetchall()
+        conn.close()
+
+        if not rows:
+            raise HTTPException(status_code=404, detail="Nem található dolgozat a megadott osztályhoz és technológiához!")
+
+        # A jelenlegi pontos időpont (Magyarországi időzóna szerint)
+        now = datetime.now(ZoneInfo("Europe/Budapest"))
+
+        best_exam = None
+        min_diff = float('inf')
+
+        # Megkeressük azt a dolgozatot, aminek a datum_ido értéke a legközelebb áll a jelenlegi időhöz
+        for r in rows:
+            try:
+                # ISO formátum parse-olása (pl. "2026-08-24T10:00")
+                exam_dt = datetime.fromisoformat(r[5])
+                if exam_dt.tzinfo is None:
+                    exam_dt = exam_dt.replace(tzinfo=ZoneInfo("Europe/Budapest"))
+                
+                diff = abs((exam_dt - now).total_seconds())
+                if diff < min_diff:
+                    min_diff = diff
+                    best_exam = {
+                        "id": r[0],
+                        "osztaly": r[1],
+                        "technologia": r[2],
+                        "nehezseg": r[3],
+                        "feladat": r[4],
+                        "datum_ido": r[5]
+                    }
+            except Exception as parse_err:
+                print("Dátum parszolási hiba egy sornál:", parse_err)
+                continue
+
+        if not best_exam:
+            raise HTTPException(status_code=404, detail="Nem sikerült érvényes dolgozatot azonosítani.")
+
+        return best_exam
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Adatbázis hiba: {str(e)}")
+    
 @app.get("/tanar")
 def read_teacher_page():
     file_path = os.path.join(os.path.dirname(__file__), "tanar.html")
