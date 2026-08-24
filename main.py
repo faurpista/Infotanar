@@ -87,7 +87,7 @@ def init_db():
                 nehezseg INTEGER,
                 feladat TEXT,
                 datum_ido TEXT,
-                hossz INT
+                hossz INTEGER
             )
         ''')
     
