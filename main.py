@@ -74,7 +74,8 @@ def init_db():
                 technologia TEXT,
                 nehezseg INT,
                 feladat TEXT,
-                datum_ido TEXT
+                datum_ido TEXT,
+                hossz INT
             )
         ''')
     else:
@@ -85,7 +86,8 @@ def init_db():
                 technologia TEXT,
                 nehezseg INTEGER,
                 feladat TEXT,
-                datum_ido TEXT
+                datum_ido TEXT,
+                hossz INT
             )
         ''')
     
@@ -117,6 +119,7 @@ class ExamCreateRequest(BaseModel):
     nehezseg: int
     feladat: str
     datum_ido: str
+    hossz: int
 
 @app.post("/api/create-exam")
 async def create_exam(req: ExamCreateRequest):
@@ -127,11 +130,11 @@ async def create_exam(req: ExamCreateRequest):
         # PostgreSQL placeholder: %s | SQLite placeholder: %s (psycopg2) vagy ?
         placeholder = "%s" if DATABASE_URL else "?"
         query = f'''
-            INSERT INTO dolgozat (osztaly, technologia, nehezseg, feladat, datum_ido)
-            VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+            INSERT INTO dolgozat (osztaly, technologia, nehezseg, feladat, datum_ido, hossz)
+            VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
         '''
         
-        cursor.execute(query, (req.osztaly, req.technologia, req.nehezseg, req.feladat, req.datum_ido))
+        cursor.execute(query, (req.osztaly, req.technologia, req.nehezseg, req.feladat, req.datum_ido, req.hossz))
         conn.commit()
         conn.close()
 
@@ -274,7 +277,7 @@ def get_active_exam(osztaly: int, technologia: str):
     try:
         # A megadott osztály és technológia alapján lekérjük a dolgozatokat
         cursor.execute('''
-            SELECT id, osztaly, technologia, nehezseg, feladat, datum_ido
+            SELECT id, osztaly, technologia, nehezseg, feladat, datum_ido, hossz
             FROM dolgozat
             WHERE osztaly = %s AND technologia = %s
         ''', (osztaly, technologia))
@@ -307,7 +310,8 @@ def get_active_exam(osztaly: int, technologia: str):
                         "technologia": r[2],
                         "nehezseg": r[3],
                         "feladat": r[4],
-                        "datum_ido": r[5]
+                        "datum_ido": r[5],
+                        "hossz": r[6],
                     }
             except Exception as parse_err:
                 print("Dátum parszolási hiba egy sornál:", parse_err)
