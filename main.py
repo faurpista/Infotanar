@@ -31,9 +31,15 @@ app.add_middleware(
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 # Cserélje ki erre a main.py-ban:
-NEON_URL = "postgresql://neondb_owner:npg_Y5VbvQrazH2e@ep-royal-truth-b2m8phbz-pooler.c-6.eu-central-1.aws.neon.tech/infotanar_db?sslmode=require&channel_binding=require"
+NEON_URL = "postgres://neondb_owner:npg_Y5VbvQrazH2e@ep-royal-truth-b2m8phbz-pooler.c-6.eu-central-1.aws.neon.tech/infotanar_db?sslmode=require"
 DATABASE_URL = os.getenv("DATABASE_URL", NEON_URL)
+# BIZTONSÁGI JAVÍTÁS: Ha a Render postgresql://-el adta át, átírjuk postgres://-re
+if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgres://", 1)
 
+# BIZTONSÁGI JAVÍTÁS 2: Ha benne maradt a channel_binding, ami összeomlást okoz, kivesszük
+if "channel_binding=" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.split("&channel_binding=")[0]
 
 # 🗄️ ADATBÁZIS CSATLAKOZÁS (PostgreSQL / SQLite fallback)
 def get_db_connection():
