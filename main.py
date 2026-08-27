@@ -30,7 +30,10 @@ app.add_middleware(
 # 🔑 API KULCSOK ÉS DATABASE URL A RENDER KÖRNYEZETI VÁLTOZÓIBÓL
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-DATABASE_URL = os.getenv("DATABASE_URL", "") # Render automatikusan kitölti
+# Cserélje ki erre a main.py-ban:
+NEON_URL = "postgres://indotanar_user:T8mFqRbxpWqrkM9bUtPl9mYssEsckNtc@ep-cool-shadow-123456.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL = os.getenv("DATABASE_URL", NEON_URL)
+
 
 # 🗄️ ADATBÁZIS CSATLAKOZÁS (PostgreSQL / SQLite fallback)
 def get_db_connection():
