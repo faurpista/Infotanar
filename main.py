@@ -31,7 +31,7 @@ app.add_middleware(
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 # Cserélje ki erre a main.py-ban:
-NEON_URL = "postgres://indotanar_user:T8mFqRbxpWqrkM9bUtPl9mYssEsckNtc@ep-cool-shadow-123456.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+NEON_URL = "postgresql://neondb_owner:npg_Y5VbvQrazH2e@ep-royal-truth-b2m8phbz-pooler.c-6.eu-central-1.aws.neon.tech/infotanar_db?sslmode=require&channel_binding=require"
 DATABASE_URL = os.getenv("DATABASE_URL", NEON_URL)
 
 
